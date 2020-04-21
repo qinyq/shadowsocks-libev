@@ -1,76 +1,141 @@
-shadowsocks-libev
-=================
+# shadowsocks-libev
 
-Intro
------
+[![Build Status](https://travis-ci.com/shadowsocks/shadowsocks-libev.svg?branch=master)](https://travis-ci.com/shadowsocks/shadowsocks-libev) [![Snap Status](https://build.snapcraft.io/badge/shadowsocks/shadowsocks-libev.svg)](https://build.snapcraft.io/user/shadowsocks/shadowsocks-libev)
 
-[Shadowsocks-libev](http://shadowsocks.org) is a lightweight secured socks5 
-proxy for embedded devices and low end boxes.
+## Intro
 
-It is a port of [shadowsocks](https://github.com/shadowsocks/shadowsocks) 
-created by [@clowwindy](https://github.com/clowwindy) maintained by 
+[Shadowsocks-libev](https://shadowsocks.org) is a lightweight secured SOCKS5
+proxy for embedded devices and low-end boxes.
+
+It is a port of [Shadowsocks](https://github.com/shadowsocks/shadowsocks)
+created by [@clowwindy](https://github.com/clowwindy), and maintained by
 [@madeye](https://github.com/madeye) and [@linusyang](https://github.com/linusyang).
 
-Current version: 2.3.0 | [Changelog](debian/changelog)
+Current version: 3.3.4 | [Changelog](debian/changelog)
 
-Travis CI: [![Travis CI](https://travis-ci.org/shadowsocks/shadowsocks-libev.png?branch=master)](https://travis-ci.org/shadowsocks/shadowsocks-libev) | Jenkins Matrix: [![Jenkins](https://jenkins.shadowvpn.org/buildStatus/icon?job=Shadowsocks-libev)](https://jenkins.shadowvpn.org/job/Shadowsocks-libev/)
+## Features
 
-Features
---------
+Shadowsocks-libev is written in pure C and depends on [libev](http://software.schmorp.de/pkg/libev.html). It's designed
+to be a lightweight implementation of shadowsocks protocol, in order to keep the resource usage as low as possible.
 
-Shadowsocks-libev is writen in pure C and only depends on
-[libev](http://software.schmorp.de/pkg/libev.html) and 
-[openssl](http://www.openssl.org/) or [polarssl](https://polarssl.org/).
+For a full list of feature comparison between different versions of shadowsocks,
+refer to the [Wiki page](https://github.com/shadowsocks/shadowsocks/wiki/Feature-Comparison-across-Different-Versions).
 
-In normal usage, the memory footprint is about 600KB and the CPU utilization is 
-no more than 5% on a low-end router (Buffalo WHR-G300N V2 with a 400MHz MIPS CPU, 
-32MB memory and 4MB flash).
+## Quick Start
 
-Installation
-------------
+Snap is the recommended way to install the latest binaries.
 
-#### Notes about PolarSSL
+### Install snap core
 
-* Default crypto library is OpenSSL. To build against PolarSSL,
-specify `--with-crypto-library=polarssl` and  `--with-polarssl=/path/to/polarssl`
-when running `./configure`.
-* PolarSSL __1.2.5 or newer__ is required. Currently, PolarSSL does __NOT__ support 
-CAST5-CFB, DES-CFB, IDEA-CFB, RC2-CFB and SEED-CFB.
-* RC4 is only support by PolarSSL __1.3.0 or above__.
+https://snapcraft.io/core
+
+### Install from snapcraft.io
+
+Stable channel:
+
+```bash
+sudo snap install shadowsocks-libev
+```
+
+Edge channel:
+
+```bash
+sudo snap install shadowsocks-libev --edge
+```
+
+## Installation
+
+### Distribution-specific guide
+
+- [Debian & Ubuntu](#debian--ubuntu)
+    + [Install from repository](#install-from-repository)
+    + [Build deb package from source](#build-deb-package-from-source)
+    + [Configure and start the service](#configure-and-start-the-service)
+- [Fedora & RHEL](#fedora--rhel)
+    + [Build from source with centos](#build-from-source-with-centos)
+- [Archlinux & Manjaro](#archlinux--manjaro)
+- [NixOS](#nixos)
+- [Nix](#nix)
+- [Directly build and install on UNIX-like system](#linux)
+- [FreeBSD](#freebsd)
+    + [Install](#install)
+    + [Configuration](#configuration)
+    + [Run](#run)
+    + [Run as client](#run-as-client)
+- [OpenWRT](#openwrt)
+- [OS X](#os-x)
+- [Windows (MinGW)](#windows-mingw)
+- [Docker](#docker)
+
+* * *
+
+### Pre-build configure guide
+
+For a complete list of available configure-time option,
+try `configure --help`.
 
 ### Debian & Ubuntu
 
-#### Install from repository
+#### Install from repository (not recommended)
 
-Add GPG public key
+Shadowsocks-libev is available in the official repository for following distributions:
+
+* Debian 8 or higher, including oldoldstable (jessie), old stable (stretch), stable (buster), testing (bullseye) and unstable (sid)
+* Ubuntu 16.10 or higher
 
 ```bash
-wget -O- http://shadowsocks.org/debian/1D27208A.gpg | sudo apt-key add -
+sudo apt update
+sudo apt install shadowsocks-libev
 ```
 
-Add either of the following lines to your /etc/apt/sources.list
+#### Build deb package from source
 
+Supported distributions:
+
+* Debian 8, 9 or higher
+* Ubuntu 14.04 LTS, 16.04 LTS, 16.10 or higher
+
+You can build shadowsocks-libev and all its dependencies by script:
+
+```bash
+mkdir -p ~/build-area/
+cp ./scripts/build_deb.sh ~/build-area/
+cd ~/build-area
+./build_deb.sh
 ```
-# Debian Wheezy, Ubuntu 12.04 or any distribution with libssl > 1.0.1
-deb http://shadowsocks.org/debian wheezy main
 
-# Debian Squeeze, Ubuntu 11.04, or any distribution with libssl > 0.9.8, but < 1.0.0
-deb http://shadowsocks.org/debian squeeze main
-```
+For older systems, building `.deb` packages is not supported.
+Please try to build and install directly from source. See the [Linux](#linux) section below.
 
-Then,
+**Note for Debian 8 (Jessie) users to build their own deb packages**:
 
-``` bash
-sudo apt-get update
-sudo apt-get install shadowsocks-libev
-```
+We strongly encourage you to install shadowsocks-libev from `jessie-backports-sloppy`. If you insist on building from source, you will need to manually install libsodium from `jessie-backports-sloppy`, **NOT** libsodium in main repository.
 
-#### Build package from source
+For more info about backports, you can refer [Debian Backports](https://backports.debian.org).
 
 ``` bash
 cd shadowsocks-libev
-sudo apt-get install build-essential autoconf libtool libssl-dev gawk debhelper
-dpkg-buildpackage -us -uc
+sudo sh -c 'printf "deb http://deb.debian.org/debian jessie-backports main" > /etc/apt/sources.list.d/jessie-backports.list'
+sudo sh -c 'printf "deb http://deb.debian.org/debian jessie-backports-sloppy main" >> /etc/apt/sources.list.d/jessie-backports.list'
+sudo apt-get install --no-install-recommends devscripts equivs
+mk-build-deps --root-cmd sudo --install --tool "apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y"
+./autogen.sh && dpkg-buildpackage -b -us -uc
+cd ..
+sudo dpkg -i shadowsocks-libev*.deb
+```
+
+**Note for Debian 9 (Stretch) users to build their own deb packages**:
+
+We strongly encourage you to install shadowsocks-libev from `stretch-backports`. If you insist on building from source, you will need to manually install libsodium from `stretch-backports`, **NOT** libsodium in main repository.
+
+For more info about backports, you can refer [Debian Backports](https://backports.debian.org).
+
+``` bash
+cd shadowsocks-libev
+sudo sh -c 'printf "deb http://deb.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/stretch-backports.list'
+sudo apt-get install --no-install-recommends devscripts equivs
+mk-build-deps --root-cmd sudo --install --tool "apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y"
+./autogen.sh && dpkg-buildpackage -b -us -uc
 cd ..
 sudo dpkg -i shadowsocks-libev*.deb
 ```
@@ -78,265 +143,358 @@ sudo dpkg -i shadowsocks-libev*.deb
 #### Configure and start the service
 
 ```
-# Edit the configuration
+# Edit the configuration file
 sudo vim /etc/shadowsocks-libev/config.json
 
+# Edit the default configuration for debian
+sudo vim /etc/default/shadowsocks-libev
+
 # Start the service
-sudo /etc/init.d/shadowsocks-libev start
+sudo /etc/init.d/shadowsocks-libev start    # for sysvinit, or
+sudo systemctl start shadowsocks-libev      # for systemd
 ```
 
 ### Fedora & RHEL
 
-Supported distributions include
-- Fedora 20, 21, rawhide
-- RHEL 6, 7 and derivatives (including CentOS, Scientific Linux)
+Supported distributions:
 
-#### Install from repository
+* Recent Fedora versions (until EOL)
+* RHEL 6, 7 and derivatives (including CentOS, Scientific Linux)
 
-Enable repo via `dnf`:
+#### Build from source with centos
 
-```
-su -c 'dnf copr enable librehat/shadowsocks'
-```
-
-Or download yum repo on [Fedora Copr](https://copr.fedoraproject.org/coprs/librehat/shadowsocks/) and put it inside `/etc/yum.repos.d/`. The release `Epel` is for RHEL and its derivatives.
-
-Then, install `shadowsocks-libev` via `dnf`:
+If you are using CentOS 7, you need to install these prerequirements to build from source code:
 
 ```bash
-su -c 'dnf update'
-su -c 'dnf install shadowsocks-libev'
+yum install epel-release -y
+yum install gcc gettext autoconf libtool automake make pcre-devel asciidoc xmlto c-ares-devel libev-devel libsodium-devel mbedtls-devel -y
 ```
 
-or `yum`:
+### Archlinux & Manjaro
 
 ```bash
-su -c 'yum update'
-su -c 'yum install shadowsocks-libev'
+sudo pacman -S shadowsocks-libev
+```
+
+Please refer to downstream [PKGBUILD](https://projects.archlinux.org/svntogit/community.git/tree/trunk?h=packages/shadowsocks-libev)
+script for extra modifications and distribution-specific bugs.
+
+### NixOS
+
+```bash
+nix-env -iA nixos.shadowsocks-libev
+```
+
+### Nix
+
+```bash
+nix-env -iA nixpkgs.shadowsocks-libev
 ```
 
 ### Linux
 
-For Unix-like systems, especially Debian-based systems, 
-e.g. Ubuntu, Debian or Linux Mint, you can build the binary like this:
+In general, you need the following build dependencies:
+
+* autotools (autoconf, automake, libtool)
+* gettext
+* pkg-config
+* libmbedtls
+* libsodium
+* libpcre3 (old pcre library)
+* libev
+* libc-ares
+* asciidoc (for documentation only)
+* xmlto (for documentation only)
+
+Notes: Fedora 26  libsodium version >= 1.0.12, so you can install via dnf install libsodium instead build from source.
+
+If your system is too old to provide libmbedtls and libsodium (later than **v1.0.8**), you will need to either install those libraries manually or upgrade your system.
+
+If your system provides with those libraries, you **should not** install them from source. You should jump this section and install them from distribution repository instead.
+
+For some of the distributions, you might install build dependencies like this:
 
 ```bash
-sudo apt-get install build-essential autoconf libtool libssl-dev
-./configure && make
+# Installation of basic build dependencies
+## Debian / Ubuntu
+sudo apt-get install --no-install-recommends gettext build-essential autoconf libtool libpcre3-dev asciidoc xmlto libev-dev libc-ares-dev automake libmbedtls-dev libsodium-dev
+## CentOS / Fedora / RHEL
+sudo yum install gettext gcc autoconf libtool automake make asciidoc xmlto c-ares-devel libev-devel
+## Arch
+sudo pacman -S gettext gcc autoconf libtool automake make asciidoc xmlto c-ares libev
+
+# Installation of libsodium
+export LIBSODIUM_VER=1.0.16
+wget https://download.libsodium.org/libsodium/releases/libsodium-$LIBSODIUM_VER.tar.gz
+tar xvf libsodium-$LIBSODIUM_VER.tar.gz
+pushd libsodium-$LIBSODIUM_VER
+./configure --prefix=/usr && make
+sudo make install
+popd
+sudo ldconfig
+
+# Installation of MbedTLS
+export MBEDTLS_VER=2.6.0
+wget https://tls.mbed.org/download/mbedtls-$MBEDTLS_VER-gpl.tgz
+tar xvf mbedtls-$MBEDTLS_VER-gpl.tgz
+pushd mbedtls-$MBEDTLS_VER
+make SHARED=1 CFLAGS="-O2 -fPIC"
+sudo make DESTDIR=/usr install
+popd
+sudo ldconfig
+
+# Start building
+./autogen.sh && ./configure && make
 sudo make install
 ```
 
+You may need to manually install missing softwares.
+
 ### FreeBSD
+#### Install
+Shadowsocks-libev is available in FreeBSD Ports Collection. You can install it in either way, `pkg` or `ports`.
+
+**pkg (recommended)**
 
 ```bash
-su
+pkg install shadowsocks-libev
+```
+
+**ports**
+
+```bash
 cd /usr/ports/net/shadowsocks-libev
 make install
 ```
 
-Edit your config.json file. By default, it's located in /usr/local/etc/shadowsocks-libev
+#### Configuration
+Edit your `config.json` file. By default, it's located in `/usr/local/etc/shadowsocks-libev`.
 
-To enable shadowsocks-libev, add the following rc variable to your /etc/rc.conf file.
+To enable shadowsocks-libev, add the following rc variable to your `/etc/rc.conf` file:
 
 ```
 shadowsocks_libev_enable="YES"
 ```
 
-Start the shadowsocks server:
+#### Run
+
+Start the Shadowsocks server:
 
 ```bash
 service shadowsocks_libev start
 ```
 
-### OpenWRT
+#### Run as client
+By default, shadowsocks-libev is running as a server in FreeBSD. If you would like to start shadowsocks-libev in client mode, you can modify the rc script (`/usr/local/etc/rc.d/shadowsocks_libev`) manually.
 
-```bash
-# At OpenWRT build root
-pushd package
-git clone https://github.com/shadowsocks/shadowsocks-libev.git
-popd
-
-# Enable shadowsocks-libev in network category 
-make menuconfig
-
-# Optional
-make -j
-
-# Build the package
-make V=99 package/shadowsocks-libev/openwrt/compile
+```
+# modify the following line from "ss-server" to "ss-local"
+command="/usr/local/bin/ss-local"
 ```
 
-### OS X
-For OS X , use [homebrew](http://brew.sh) to install or build.
+Note that is simply a workaround, each time you upgrade the port your changes will be overwritten by the new version.
 
-Install homebrew
+### OpenWRT
+
+The OpenWRT project is maintained here:
+[openwrt-shadowsocks](https://github.com/shadowsocks/openwrt-shadowsocks).
+
+### OS X
+For OS X, use [Homebrew](http://brew.sh) to install or build.
+
+Install Homebrew:
 
 ```bash
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 ```
-Install shadowsocks-libev
+Install shadowsocks-libev:
 
 ```bash
 brew install shadowsocks-libev
 ```
 
-### Windows
+### Windows (MinGW)
+To build Windows native binaries, the recommended method is to use Docker:
 
-For Windows, use either MinGW (msys) or Cygwin to build.
-At the moment, only `ss-local` is supported to build against MinGW (msys).
+* On Windows: double-click `make.bat` in `docker\mingw`
+* On Unix-like system:
 
-If you are using MinGW (msys), please download OpenSSL or PolarSSL source tarball
-to the home directory of msys, and build it like this (may take a few minutes):
+        cd shadowsocks-libev/docker/mingw
+        make
 
-* OpenSSL
+A tarball with 32-bit and 64-bit binaries will be generated in the same directory.
 
-```bash
-tar zxf openssl-1.0.1e.tar.gz
-cd openssl-1.0.1e
-./config --prefix="$HOME/prebuilt" --openssldir="$HOME/prebuilt/openssl"
-make && make install
+You could also manually use MinGW-w64 compilers to build in Unix-like shell (MSYS2/Cygwin), or cross-compile on Unix-like systems (Linux/MacOS). Please refer to build scripts in `docker/mingw`.
+
+Currently you need to use a patched libev library for MinGW:
+
+* https://github.com/shadowsocks/libev/archive/mingw.zip
+
+Notice that TCP Fast Open (TFO) is only available on **Windows 10**, **1607** or later version (precisely, build >= 14393). If you are using **1709** (build 16299) or later version, you also need to run the following command in PowerShell/Command Prompt **as Administrator** and **reboot** to use TFO properly:
+
+        netsh int tcp set global fastopenfallback=disabled
+
+### Docker
+
+As you expect, simply pull the image and run.
+```
+docker pull shadowsocks/shadowsocks-libev
+docker run -e PASSWORD=<password> -p<server-port>:8388 -p<server-port>:8388/udp -d shadowsocks/shadowsocks-libev
 ```
 
-* PolarSSL
+More information about the image can be found [here](docker/alpine/README.md).
 
-```bash
-tar zxf polarssl-1.3.2-gpl.tgz
-cd polarssl-1.3.2
-make lib WINDOWS=1
-make install DESTDIR="$HOME/prebuilt"
-```
+## Usage
 
-Then, build the binary using the commands below, and all `.exe` files 
-will be built at `$HOME/ss/bin`:
+For a detailed and complete list of all supported arguments,
+you may refer to the man pages of the applications, respectively.
 
-* OpenSSL
+    ss-[local|redir|server|tunnel|manager]
 
-```bash
-./configure --prefix="$HOME/ss" --with-openssl="$HOME/prebuilt"
-make && make install
-```
+       -s <server_host>           Host name or IP address of your remote server.
 
-* PolarSSL
+       -p <server_port>           Port number of your remote server.
 
-```bash
-./configure --prefix="$HOME/ss" --with-crypto-library=polarssl --with-polarssl=$HOME/prebuilt
-make && make install
-```
+       -l <local_port>            Port number of your local server.
 
-Usage
------
+       -k <password>              Password of your remote server.
 
-```
-    ss-[local|redir|server|tunnel]
-
-       -s <server_host>           host name or ip address of your remote server
-
-       -p <server_port>           port number of your remote server
-
-       -l <local_port>            port number of your local server
-
-       -k <password>              password of your remote server
-
-       [-m <encrypt_method>]      encrypt method: table, rc4, rc4-md5,
+       -m <encrypt_method>        Encrypt method: rc4-md5,
+                                  aes-128-gcm, aes-192-gcm, aes-256-gcm,
                                   aes-128-cfb, aes-192-cfb, aes-256-cfb,
-                                  bf-cfb, camellia-128-cfb, camellia-192-cfb,
-                                  camellia-256-cfb, cast5-cfb, des-cfb, idea-cfb,
-                                  rc2-cfb, seed-cfb, salsa20 and chacha20
+                                  aes-128-ctr, aes-192-ctr, aes-256-ctr,
+                                  camellia-128-cfb, camellia-192-cfb,
+                                  camellia-256-cfb, bf-cfb,
+                                  chacha20-ietf-poly1305,
+                                  xchacha20-ietf-poly1305,
+                                  salsa20, chacha20 and chacha20-ietf.
+                                  The default cipher is chacha20-ietf-poly1305.
 
-       [-f <pid_file>]            the file path to store pid
+       [-a <user>]                Run as another user.
 
-       [-t <timeout>]             socket timeout in seconds
+       [-f <pid_file>]            The file path to store pid.
 
-       [-c <config_file>]         the path to config file
+       [-t <timeout>]             Socket timeout in seconds.
 
-       [-i <interface>]           network interface to bind,
-                                  not available in redir mode
+       [-c <config_file>]         The path to config file.
 
-       [-b <local_address>]       local address to bind,
-                                  not available in server mode
+       [-n <number>]              Max number of open files.
 
-       [-u]                       enable udprelay mode,
-                                  TPROXY is required in redir mode
+       [-i <interface>]           Network interface to bind.
+                                  (not available in redir mode)
 
-       [-L <addr>:<port>]         specify destination server address and port
-                                  for local port forwarding,
-                                  only available in tunnel mode
+       [-b <local_address>]       Local address to bind.
+                                  For servers: Specify the local address to use 
+                                  while this server is making outbound 
+                                  connections to remote servers on behalf of the
+                                  clients.
+                                  For clients: Specify the local address to use 
+                                  while this client is making outbound 
+                                  connections to the server.
 
-       [-d <addr>]                setup name servers for internal DNS resolver,
-                                  only available in server mode
+       [-u]                       Enable UDP relay.
+                                  (TPROXY is required in redir mode)
 
-       [--fast-open]              enable TCP fast open,
-                                  only available in local and server mode,
-                                  with Linux kernel > 3.7.0
+       [-U]                       Enable UDP relay and disable TCP relay.
+                                  (not available in local mode)
 
-       [--acl <acl_file>]         config file of ACL (Access Control List)
-                                  only available in local and server mode
+       [-L <addr>:<port>]         Destination server address and port
+                                  for local port forwarding.
+                                  (only available in tunnel mode)
 
-       [--manager_address <addr>] UNIX domain socket address
-                                  only available in server and manager mode
+       [-6]                       Resolve hostname to IPv6 address first.
 
-       [--executable <path>]      path to the executable of ss-server
-                                  only available in manager mode
+       [-d <addr>]                Name servers for internal DNS resolver.
+                                  (only available in server mode)
 
-       [-v]                       verbose mode
+       [--reuse-port]             Enable port reuse.
 
-notes:
+       [--fast-open]              Enable TCP fast open.
+                                  with Linux kernel > 3.7.0.
+                                  (only available in local and server mode)
 
-    ss-redir provides a transparent proxy function and only works on the 
-    Linux platform with iptables.
+       [--acl <acl_file>]         Path to ACL (Access Control List).
+                                  (only available in local and server mode)
 
-```
+       [--manager-address <addr>] UNIX domain socket address.
+                                  (only available in server and manager mode)
 
-## Advanced usage
+       [--mtu <MTU>]              MTU of your network interface.
 
-The latest shadowsocks-libev has provided a *redir* mode. You can configure your linux based box or router to proxy all tcp traffic transparently.
+       [--mptcp]                  Enable Multipath TCP on MPTCP Kernel.
+
+       [--no-delay]               Enable TCP_NODELAY.
+
+       [--executable <path>]      Path to the executable of ss-server.
+                                  (only available in manager mode)
+
+       [-D <path>]                Path to the working directory of ss-manager.
+                                  (only available in manager mode)
+
+       [--key <key_in_base64>]    Key of your remote server.
+
+       [--plugin <name>]          Enable SIP003 plugin. (Experimental)
+
+       [--plugin-opts <options>]  Set SIP003 plugin options. (Experimental)
+
+       [-v]                       Verbose mode.
+
+## Transparent proxy
+
+The latest shadowsocks-libev has provided a *redir* mode. You can configure your Linux-based box or router to proxy all TCP traffic transparently, which is handy if you use an OpenWRT-powered router.
 
     # Create new chain
-    root@Wrt:~# iptables -t nat -N SHADOWSOCKS
-    root@Wrt:~# iptables -t mangle -N SHADOWSOCKS
-    
+    iptables -t nat -N SHADOWSOCKS
+    iptables -t mangle -N SHADOWSOCKS
+
     # Ignore your shadowsocks server's addresses
     # It's very IMPORTANT, just be careful.
-    root@Wrt:~# iptables -t nat -A SHADOWSOCKS -d 123.123.123.123 -j RETURN
+    iptables -t nat -A SHADOWSOCKS -d 123.123.123.123 -j RETURN
 
     # Ignore LANs and any other addresses you'd like to bypass the proxy
     # See Wikipedia and RFC5735 for full list of reserved networks.
     # See ashi009/bestroutetb for a highly optimized CHN route list.
-    root@Wrt:~# iptables -t nat -A SHADOWSOCKS -d 0.0.0.0/8 -j RETURN
-    root@Wrt:~# iptables -t nat -A SHADOWSOCKS -d 10.0.0.0/8 -j RETURN
-    root@Wrt:~# iptables -t nat -A SHADOWSOCKS -d 127.0.0.0/8 -j RETURN
-    root@Wrt:~# iptables -t nat -A SHADOWSOCKS -d 169.254.0.0/16 -j RETURN
-    root@Wrt:~# iptables -t nat -A SHADOWSOCKS -d 172.16.0.0/12 -j RETURN
-    root@Wrt:~# iptables -t nat -A SHADOWSOCKS -d 192.168.0.0/16 -j RETURN
-    root@Wrt:~# iptables -t nat -A SHADOWSOCKS -d 224.0.0.0/4 -j RETURN
-    root@Wrt:~# iptables -t nat -A SHADOWSOCKS -d 240.0.0.0/4 -j RETURN
+    iptables -t nat -A SHADOWSOCKS -d 0.0.0.0/8 -j RETURN
+    iptables -t nat -A SHADOWSOCKS -d 10.0.0.0/8 -j RETURN
+    iptables -t nat -A SHADOWSOCKS -d 127.0.0.0/8 -j RETURN
+    iptables -t nat -A SHADOWSOCKS -d 169.254.0.0/16 -j RETURN
+    iptables -t nat -A SHADOWSOCKS -d 172.16.0.0/12 -j RETURN
+    iptables -t nat -A SHADOWSOCKS -d 192.168.0.0/16 -j RETURN
+    iptables -t nat -A SHADOWSOCKS -d 224.0.0.0/4 -j RETURN
+    iptables -t nat -A SHADOWSOCKS -d 240.0.0.0/4 -j RETURN
 
     # Anything else should be redirected to shadowsocks's local port
-    root@Wrt:~# iptables -t nat -A SHADOWSOCKS -p tcp -j REDIRECT --to-ports 12345
+    iptables -t nat -A SHADOWSOCKS -p tcp -j REDIRECT --to-ports 12345
 
     # Add any UDP rules
-    root@Wrt:~# ip rule add fwmark 0x01/0x01 table 100
-    root@Wrt:~# ip route add local 0.0.0.0/0 dev lo table 100
-    root@Wrt:~# iptables -t mangle -A SHADOWSOCKS -p udp --dport 53 -j TPROXY --on-port 12345 --tproxy-mark 0x01/0x01
-    
+    ip route add local default dev lo table 100
+    ip rule add fwmark 1 lookup 100
+    iptables -t mangle -A SHADOWSOCKS -p udp --dport 53 -j TPROXY --on-port 12345 --tproxy-mark 0x01/0x01
+
     # Apply the rules
-    root@Wrt:~# iptables -t nat -A PREROUTING -p tcp -j SHADOWSOCKS
-    root@Wrt:~# iptables -t mangle -A PREROUTING -j SHADOWSOCKS
+    iptables -t nat -A PREROUTING -p tcp -j SHADOWSOCKS
+    iptables -t mangle -A PREROUTING -j SHADOWSOCKS
 
     # Start the shadowsocks-redir
-    root@Wrt:~# ss-redir -u -c /etc/config/shadowsocks.json -f /var/run/shadowsocks.pid
+    ss-redir -u -c /etc/config/shadowsocks.json -f /var/run/shadowsocks.pid
+
 
 ## Security Tips
 
-Although shadowsocks-libev can handle thousands of concurrent connections nicely, we still recommend to
-set up your server's firewall rules to limit connections from each user.
+For any public server, to avoid users accessing localhost of your server, please add `--acl acl/server_block_local.acl` to the command line.
 
-    # Up to 32 connections are enough for normal usages
+Although shadowsocks-libev can handle thousands of concurrent connections nicely, we still recommend
+setting up your server's firewall rules to limit connections from each user:
+
+    # Up to 32 connections are enough for normal usage
     iptables -A INPUT -p tcp --syn --dport ${SHADOWSOCKS_PORT} -m connlimit --connlimit-above 32 -j REJECT --reject-with tcp-reset
 
 ## License
 
-Copyright (C) 2014 Max Lv <max.c.lv@gmail.com>
+```
+Copyright: 2013-2015, Clow Windy <clowwindy42@gmail.com>
+           2013-2018, Max Lv <max.c.lv@gmail.com>
+           2014, Linus Yang <linusyang@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -350,3 +508,4 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
+```
